@@ -5,22 +5,36 @@
 
 % Description: Library used to control the uEye camera.
 
+% TODO
+% 		- redirect all verbose output over VPrintf
+
 classdef uEyeCam < handle
 
 	properties (Constant, Hidden)
-		CAMERADLL='C:\Program Files\IDS\uEye\Develop\DotNet\signed\uEyeDotNet.dll';
-		CAMERACLASSNAME='uEye.Camera';
+		CAMERADLL(1, :) char = ...
+			'C:\Program Files\IDS\uEye\Develop\DotNet\signed\uEyeDotNet.dll';
+		CAMERACLASSNAME(1, :) char ='uEye.Camera';
+		connectOnInit(1, 1) logical = 1; % connect cam on startup?
 	end
 
-	properties 
-		cam;
-		displaymode; % bitmap, 
-		triggermode; % software,
-		colormode; % raw8, raw16
-		img;
-		exposuretime; % ms
-		gammacorrection;
-		boost; % either 0 or 1
+	properties
+		cam; % holds DLL object
+		colormode(1, :) char; % raw8, raw16
+		img; % struct containing all the image information
+		data(:, :); % contains image after Acquire()
+		boost(1, 1) logical; % either 0 or 1
+		flagVerbose(1, 1) logical = 1; % enable or disable verbose output
+		flagDisplay(1, 1) logical = 1; % enable or disable visual output
+		imscColors(:, 3) double; % colormap to display images
+		thresSatPixel(1, 1) single = 1; % threshold for saturation warning [%]
+	end
+
+	properties(Dependent)
+		triggermode(1, :) char; % software,
+		gammacorrection(1, 1) logical;
+		displaymode(1, :) char; % bitmap, 
+		exposuretime(1, 1) single; % ms
+		isFinished(1, 1) logical; % is acqisition finished
 	end
 
 	methods
@@ -29,18 +43,25 @@ classdef uEyeCam < handle
 		function uEyeCam = uEyeCam()
 			uEyeCam.Load_DLLs;
 			uEyeCam.cam = uEye.Camera;
-			status = uEyeCam.cam.Init;
-			if strcmp(status, 'Success')
-				fprintf('[uEyeCam] Connection established.\n');
-				uEyeCam.gammacorrection = 0;
-				uEyeCam.displaymode = 'DiB';
-				uEyeCam.colormode = 'raw8';
-				uEyeCam.triggermode = 'software';
-				uEyeCam.boost = 0;
-				uEyeCam.Allocate_Memory();
-			else
-				warning('[uEyeCam] Could not open connection');
+			if uEyeCam.connectOnInit
+				status = uEyeCam.cam.Init(0)
+				if strcmp(status, 'Success')
+					fprintf('[uEyeCam] Connection established.\n');
+					uEyeCam.gammacorrection = 0;
+					uEyeCam.displaymode = 'DiB';
+					uEyeCam.colormode = 'raw8';
+					uEyeCam.triggermode = 'software';
+					uEyeCam.boost = 0;
+					uEyeCam.Allocate_Memory();
+				else
+					txtMsg = ['Could not open connection, status: ', status];
+					warning(txtMsg);
+				end
 			end
+			
+			% build colormap
+			uEyeCam.imscColors = bone(1024); % use bone as default colormap
+			uEyeCam.imscColors(end, :) = [1, 0, 0]; % make max element red to see saturation
 		end
 
 		% destructor
@@ -53,12 +74,19 @@ classdef uEyeCam < handle
 			end
 		end
 
-		% Exposuretime
+		function isFinished = get.isFinished(uc)
+			[errCheck, isFinished] = uc.cam.Acquisition.IsFinished;
+			if ~strcmp(errCheck, 'Success')
+				error('Could not check if finished');
+			end
+		end
 
+		% Exposuretime
 		function et = get.exposuretime(ueyecam)
-			[status, et] = ueyecam.cam.Timing.Exposure.Get;
+			[status, et] = ueyecam.cam.Timing.Exposure.Get();
 			if ~strcmp(status, 'Success')
-				warning('[uEyeCam] Could not read exposure time from camera.');
+				txtMsg = ['Could not read exposure time from camera: ', status];
+				error(txtMsg);
 			end
 		end
 
@@ -100,13 +128,11 @@ classdef uEyeCam < handle
 			if islogical(gc)
 				fprintf(['[uEyeCam] Setting gamma correction to ', num2str(gc), '.\n']);
 				status = ueyecam.cam.Gamma.Hardware.SetEnable(gc);
-				if strcmp(status, 'Success')
-					ueyecam.gammacorrection = gc;
-				else
-					warning('[uEyeCam] Could not set gamma correction.');
+				if ~strcmp(status, 'Success')
+					error('Could not set gamma correction.');
 				end
 			else
-				error('[uEyeCam] Gamma correction needs to be either 0 or 1.\n');
+				error('Gamma correction needs to be either 0 or 1.\n');
 			end
 		end
 
@@ -127,10 +153,7 @@ classdef uEyeCam < handle
 			end
 			
 			status = ueyecam.cam.Display.Mode.Set(dispMode);
-			if strcmp(status, 'Success')
-				fprintf(['[uEyeCam] Display mode set to ', dpm, '.\n']);
-				ueyecam.displaymode = dpm;
-			else
+			if ~strcmp(status, 'Success')
 				error('[uEyeCam] Could not set display mode.');
 			end
 		end
@@ -156,11 +179,8 @@ classdef uEyeCam < handle
 			end
 			
 			status = ueyecam.cam.PixelFormat.Set(colorMode);
-			if strcmp(status, 'Success')
-				fprintf(['[uEyeCam] Display mode set to ', cm, '.\n']);
-				ueyecam.colormode = cm;
-			else
-				warning('[uEyeCam] Could not set colormode.');
+			if ~strcmp(status, 'Success')
+				error('[uEyeCam] Could not set colormode.');
 			end
 		end
 
@@ -174,11 +194,8 @@ classdef uEyeCam < handle
 			end
 			
 			status = ueyecam.cam.Trigger.Set(triggerMode);
-			if strcmp(status, 'Success')
-				fprintf(['[uEyeCam] Trigger mode set to ', tm, '.\n']);
-				ueyecam.triggermode = tm;
-			else
-				warning('[uEyeCam] Could not set trigger mode.');
+			if ~strcmp(status, 'Success')
+				error('[uEyeCam] Could not set trigger mode.');
 			end
 		end
 
@@ -191,7 +208,6 @@ classdef uEyeCam < handle
 		end
 		
 		% Boost
-
 		function set.boost(ueyecam, bst)
 			boolBst = boolean(bst);
 			status = ueyecam.cam.Gain.Hardware.Boost.SetEnable(boolBst);
@@ -214,9 +230,10 @@ classdef uEyeCam < handle
 		Allocate_Memory(ueyecam);
 		img = Acquire(ueyecam);
 		Calibrate_Illumination(ueyecam);
-		Adjust_Exposure_Time(ueyecam, etMax); % etMax maximum acceptable exposure time in ms
+		Adjust_Exposure_Time(ueyecam, varargin); % etMax maximum acceptable exposure time in ms
 		Live(ueyecam);
-		Save_Image(ueyecam, path);
+		Save_Image(uc, path);
+		VPrintf(uc, txtMsg, flagName);
 
 	end
 

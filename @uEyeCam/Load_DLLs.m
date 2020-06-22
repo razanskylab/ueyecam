@@ -7,15 +7,11 @@
 
 function Load_DLLs(ueyecam)
 
-	if ~exist(ueyecam.CAMERACLASSNAME, 'class')
-		try 
-			fprintf('[uEyeCam] Loading DLLs...\n');
-			NET.addAssembly(ueyecam.CAMERADLL);
-		catch
-			error('Unable to load .NET assemblies');
-		end
-	else
-		fprintf('[uEyeCam] DLLs already loaded, using existing ones.\n');
+	try 
+		fprintf('[uEyeCam] Loading DLLs...\n');
+		NET.addAssembly(ueyecam.CAMERADLL);
+	catch
+		error('Unable to load .NET assemblies');
 	end
 
 end

@@ -5,31 +5,44 @@
 
 % Description: Acquires an actual image.
 
-function img = Acquire(ueyecam)
+function img = Acquire(uc)
 
 	% Acquire image
-	if ~strcmp(ueyecam.cam.Acquisition.Freeze(true), 'Success')
-	    warning('Could not acquire image');
-	else
-		fprintf('[uEyeCam] Acquired image.\n');
-	end
-
-	%   Extract image
-	[ErrChk, tmp] = ueyecam.cam.Memory.CopyToArray(ueyecam.img.ID); 
+	uc.VPrintf('Acquire image... ', 1);
+	
+	ErrChk = uc.cam.Acquisition.Freeze();
 	if ~strcmp(ErrChk, 'Success')
-	    error('Could not obtain image data');
-	else
-		fprintf('[uEyeCam] Obtained image data.\n');
+		txtMsg = ['Could not acquire image: ', ErrChk];
+	  error(txtMsg);
 	end
 
-	%   Reshape image
-	ueyecam.img.Data = reshape(uint8(tmp), [ueyecam.img.Width, ueyecam.img.Height, ueyecam.img.Bits/8])';
+	while ~uc.isFinished
+		% do nothing
+	end
 
-	% Throw warning if camera saturated
-	if max(ueyecam.img.Data(:) >= 255)
+	% Extract image
+	[ErrChk, tmp] = uc.cam.Memory.CopyToArray(uc.img.ID); 
+	if ~strcmp(ErrChk, 'Success')
+		txtMsg = ['Could not obtain image data: ', ErrChk];
+	  error(txtMsg);
+	end
+
+	% Reshape image
+	tmp = reshape(uint8(tmp), [uc.img.Width, uc.img.Height, uc.img.Bits /8]);
+	uc.data = fliplr(flipud(tmp'));
+
+	% check for satuation
+	satPixel = single(uc.data(:) >= 255);
+	nSatPixel = sum(satPixel(:));
+	nPixel = size(uc.data, 1) * size(uc.data, 2);
+	percSatPixel = nSatPixel / nPixel * 100;
+
+	if (percSatPixel > uc.thresSatPixel)
 		warning('Camera was saturating');
 	end
 
-	img = ueyecam.img.Data;
+	img = uc.data;
+
+	uc.VPrintf('done!\n', 0);
 
 end
