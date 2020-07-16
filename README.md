@@ -1,5 +1,5 @@
 # ueyecam
-An object-oriented code wrapper used to access the uEyeCam directly from MATLAB. test
+An object-oriented code wrapper used to access the uEyeCam directly from MATLAB.
 
 # Installation
 The code relies on the DLLs delivered with the uEyeCam software. Please download the software package / driver package for your camera from [IDS Imaging](https://de.ids-imaging.com).
