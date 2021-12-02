@@ -7,11 +7,10 @@
 
 function Load_DLLs(ueyecam)
 
-	try 
+	if isfile(ueyecam.CAMERADLL)
 		fprintf('[uEyeCam] Loading DLLs...\n');
 		NET.addAssembly(ueyecam.CAMERADLL);
-	catch
-		error('Unable to load .NET assemblies');
+	else
+		error("CAMERADLL path is not pointing to a file, aborting");
 	end
-
 end

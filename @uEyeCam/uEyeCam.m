@@ -6,13 +6,13 @@
 % Description: Library used to control the uEye camera.
 
 % TODO
-% 		- redirect all verbose output over VPrintf
+% 		- redirect all verboseS output over VPrintf
 
 classdef uEyeCam < handle
 
 	properties (Constant, Hidden)
 		CAMERADLL(1, :) char = ...
-			'C:\Program Files\IDS\uEye\Develop\DotNet\signed\uEyeDotNet.dll';
+			"C:\Program Files\IDS\uEye\Develop\DotNet\signed\uEyeDotNet.dll";
 		CAMERACLASSNAME(1, :) char ='uEye.Camera';
 		connectOnInit(1, 1) logical = 1; % connect cam on startup?
 	end
@@ -124,7 +124,7 @@ classdef uEyeCam < handle
 		end
 
 		function set.gammacorrection(ueyecam, gc)
-			gc = boolean(gc);
+			gc = logical(gc);
 			if islogical(gc)
 				fprintf(['[uEyeCam] Setting gamma correction to ', num2str(gc), '.\n']);
 				status = ueyecam.cam.Gamma.Hardware.SetEnable(gc);
@@ -209,7 +209,7 @@ classdef uEyeCam < handle
 		
 		% Boost
 		function set.boost(ueyecam, bst)
-			boolBst = boolean(bst);
+			boolBst = logical(bst);
 			status = ueyecam.cam.Gain.Hardware.Boost.SetEnable(boolBst);
 			if strcmp(status, 'Success')
 				fprintf(['[uEyeCam] Successfully set boost to ', num2str(boolBst), '.\n']);
