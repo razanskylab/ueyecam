@@ -44,7 +44,7 @@ classdef uEyeCam < handle
 			uEyeCam.Load_DLLs;
 			uEyeCam.cam = uEye.Camera;
 			if uEyeCam.connectOnInit
-				status = uEyeCam.cam.Init(0)
+				status = uEyeCam.cam.Init(0);
 				if strcmp(status, 'Success')
 					fprintf('[uEyeCam] Connection established.\n');
 					uEyeCam.gammacorrection = 0;
