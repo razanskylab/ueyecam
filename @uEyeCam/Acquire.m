@@ -62,8 +62,7 @@ function img = Acquire(uc)
 		warning('Camera was saturating');
 	end
 
-	% perpare image for returning
-	img = uc.data;
+	img = uc.data; % get data to return
 
 	uc.VPrintf('done!\n', 0);
 
