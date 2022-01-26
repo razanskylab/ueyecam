@@ -18,7 +18,7 @@ function Live(ueyecam, varargin)
 
 	figure('Name', 'uEyeCam Live Preview');
 	ueyecam.Acquire();
-	iSc = imagesc(ueyecam.img.Data);
+	iSc = imagesc(ueyecam.data);
 	axis image;
 	colormap(bone(1024));
 	colorbar;
