@@ -7,7 +7,7 @@
 
 function Load_DLLs(ueyecam)
 
-	try 
+	try
 		fprintf('[uEyeCam] Loading DLLs...\n');
 		NET.addAssembly(ueyecam.CAMERADLL);
 	catch
