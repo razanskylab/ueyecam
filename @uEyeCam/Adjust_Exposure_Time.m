@@ -9,7 +9,7 @@ function Adjust_Exposure_Time(uc, varargin)
 
 	% default arguments
 	currEt = 200; % starting exposure time ms
-	thresSatPixel = uc.thresSatPixel / 10; % percentage of staurated pixels allowed
+	thresSatPixel = uc.thresSatPixel / 10; % percentage of staurated pixels allowed, Urs may delete the "/ 10"?
 	flagDisplay = uc.flagDisplay;
 
 	for iargin=1:2:(nargin-1)
