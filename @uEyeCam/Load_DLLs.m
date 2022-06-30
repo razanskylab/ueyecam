@@ -8,9 +8,12 @@
 function Load_DLLs(ueyecam)
 
 	if isfile(ueyecam.CAMERADLL)
-		fprintf('[uEyeCam] Loading DLLs...\n');
+		fprintf('[uEyeCam] Loading DLLs... ');
+		tStart = tic();
 		NET.addAssembly(ueyecam.CAMERADLL);
+		fprintf("done after %.1f sec!\n", toc(tStart));
 	else
 		error("CAMERADLL path is not pointing to a file, aborting");
 	end
+
 end
